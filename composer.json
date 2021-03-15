@@ -1,0 +1,14 @@
+{
+    "name": "dekode/helthjem-api-delivery",
+    "description": "Uses HeltHjem API for checking single address, to filter out the shipping options, on WooCommerce checkout.",
+    "type": "package",
+    "license": "GPL v.2+",
+    "authors": [
+        {
+            "name": "Alexandru Negoita",
+            "email": "alexandru@dekode.no"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}
