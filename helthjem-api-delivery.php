@@ -73,8 +73,9 @@ function front_enqueue_scripts() {
 
 	if ( function_exists( 'WC' ) && is_cart() || is_checkout() ) {
 		wp_enqueue_style( 'hcnsg-css', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'src/hcnsg-front.css', [], $plugin_data['Version'] );
+		wp_enqueue_script( 'hcnsg-js', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'src/hcnsg-front.js', [ 'jquery' ], $plugin_data['Version'], true );
+
 		if ( \get_option( 'hcnsg_style_enhance' ) && 'yes' === \get_option( 'hcnsg_style_enhance' ) ) {
-			wp_enqueue_script( 'hcnsg-js', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'src/hcnsg-front.js', [ 'jquery' ], $plugin_data['Version'], true );
 			wp_enqueue_style( 'hcnsg-css-enhance', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'src/hcnsg-front-enhance.css', [ 'hcnsg-css' ], $plugin_data['Version'] );
 		}
 	}
