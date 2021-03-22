@@ -1,6 +1,6 @@
 <?php
 /**
- * HeltHjem - Consignor Helper for WooCommerce
+ * HeltHjem - Helper for WooCommerce
  *
  * @package     HCSNG
  * @author      Alexandru Negoita
@@ -10,7 +10,7 @@
  * Plugin Name: HeltHjem - Consignor Helper for WooCommerce
  * Description: This plugin will take the zip code provided by the user and check it against the HeltHjem available services.
  *              If you have an available service on HeltHjem, which is also compatible with you shipping options, it will show it to the checkout page.
- * Version:     1.0.0
+ * Version:     1.2.0
  * Author:      Alexandru Negoita
  * Text Domain: hcsng
  * License:     GPL v2 or later
@@ -30,9 +30,10 @@ if ( is_admin() ) {
 
 if ( ! is_admin() ) {
 	include 'api/api.php';
-	include 'front/shipping-options.php';
+	include 'front/front-functionality.php';
 }
 
+require 'front/email-addition.php';
 
 
 /**
@@ -44,7 +45,7 @@ function enque_admin_scripts() {
 	$screen      = \get_current_screen();
 
 	if ( 'woocommerce_page_wc-settings' === $screen->id ) {
-		wp_enqueue_script( 'hcnsg-admin-js', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'src/hcnsg-admin.js', [ 'jquery' ], '', true );
+		wp_enqueue_script( 'hcnsg-admin-js', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'src/hcnsg-admin.js', [ 'jquery' ], $plugin_data['Version'], true );
 		wp_enqueue_style( 'hcnsg-admin-css', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'src/hcnsg-admin.css', [], $plugin_data['Version'] );
 
 		wp_localize_script(
@@ -58,4 +59,26 @@ function enque_admin_scripts() {
 	}
 }
 add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\\enque_admin_scripts' );
+
+/**
+ * Enqueue front scripts and styles.
+ */
+function front_enqueue_scripts() {
+
+	if ( ! function_exists( 'get_plugin_data' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+	}
+
+	$plugin_data = \get_plugin_data( __FILE__ );
+
+	if ( function_exists( 'WC' ) && is_cart() || is_checkout() ) {
+		wp_enqueue_style( 'hcnsg-css', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'src/hcnsg-front.css', [], $plugin_data['Version'] );
+		if ( \get_option( 'hcnsg_style_enhance' ) && 'yes' === \get_option( 'hcnsg_style_enhance' ) ) {
+			wp_enqueue_script( 'hcnsg-js', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'src/hcnsg-front.js', [ 'jquery' ], $plugin_data['Version'], true );
+			wp_enqueue_style( 'hcnsg-css-enhance', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'src/hcnsg-front-enhance.css', [ 'hcnsg-css' ], $plugin_data['Version'] );
+		}
+	}
+
+}
+add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\front_enqueue_scripts' );
 

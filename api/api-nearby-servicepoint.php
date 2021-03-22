@@ -57,7 +57,6 @@ function helthjem_nearby_check( string $parcel_url, array $body_request ) { //ph
 				$return = new \WP_Error( $request['response']['code'], $request['body'] );
 			} else {
 				$return = json_decode( $request['body'] );
-
 			}
 		}
 	}

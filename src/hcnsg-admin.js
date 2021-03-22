@@ -91,6 +91,8 @@ if ( hetlHjemZipCode && hetlHjemCountryCode && heltHjemGetNearby ) {
                         for ( const [key, value] of Object.entries(errors) ) {
                             responseHTML.innerText += key + ': ' + value;
                         }
+                    } else {
+                        responseHTML.innerHTML = '<pre>' + JSON.stringify( result, null, ' ' ) + '</pre>';
                     }
                 break;
                 default:

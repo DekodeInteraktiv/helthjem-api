@@ -13,6 +13,11 @@ use function HCSNG\LOGIN\V3\PARCEL\helthjem_nearby_check;
 
 defined( 'ABSPATH' ) || exit;
 
+// Actions and filters.
+add_action( 'wp_ajax_hcnsg_clear_login', __NAMESPACE__ . '\\clear_ogin_data' );
+add_action( 'wp_ajax_hcnsg_clear_cache', __NAMESPACE__ . '\\clear_cache_address_data' );
+add_action( 'wp_ajax_hcnsg_get_nearby_points', __NAMESPACE__ . '\\check_nearby_sevice_api_points' );
+
 /**
  * Clearing the data for the old HeltHjem account.
  */
@@ -29,7 +34,6 @@ function clear_ogin_data() {
 		wp_send_json( esc_html__( 'Could not verify nonce. Are you logged in?', 'hcnsg' ) );
 	}
 }
-add_action( 'wp_ajax_hcnsg_clear_login', __NAMESPACE__ . '\\clear_ogin_data' );
 
 /**
  * Clearing the HeltHjem cache for the already checked adresses.
@@ -47,7 +51,6 @@ function clear_cache_address_data() {
 		wp_send_json( esc_html__( 'Could not verify nonce. Are you logged in?', 'hcnsg' ) );
 	}
 }
-add_action( 'wp_ajax_hcnsg_clear_cache', __NAMESPACE__ . '\\clear_cache_address_data' );
 
 /**
  * Get the nearby service API points.
@@ -82,4 +85,3 @@ function check_nearby_sevice_api_points() {
 		wp_send_json( esc_html__( 'Could not verify nonce. Are you logged in?', 'hcnsg' ) );
 	}
 }
-add_action( 'wp_ajax_hcnsg_get_nearby_points', __NAMESPACE__ . '\\check_nearby_sevice_api_points' );

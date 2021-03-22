@@ -16,10 +16,13 @@ use function HCSNG\LOGIN\V3\TOKEN\is_token_active;
 
 defined( 'ABSPATH' ) || exit;
 
+// Actions and filters.
 add_action( 'woocommerce_init', __NAMESPACE__ . '\\add_shipping_option_transport_id' );
 add_action( 'woocommerce_settings_tabs_hcsng_settings', __NAMESPACE__ . '\\append_settings_to_tab' );
 add_action( 'woocommerce_update_options_hcsng_settings', __NAMESPACE__ . '\\update_settings' );
+add_action( 'woocommerce_admin_order_data_after_shipping_address', __NAMESPACE__ . '\\admin_show_pickup_point' );
 add_filter( 'woocommerce_settings_tabs_array', __NAMESPACE__ . '\\settings_tab', PHP_INT_MAX );
+add_filter( 'pre_update_option_hcsng_expiration_time', __NAMESPACE__ . '\\wc_hcsng_maybe_time_new', 10 );
 
 /**
  * Add the plugin settings tab.
@@ -41,11 +44,16 @@ function append_settings_to_tab() {
 
 	if ( is_token_set() ) {
 		// Extra, non-WooCommerce, settings, such as buttons for clearing data.
-		start_custom_settings();
+		start_custom_settings(); // Table start.
+		nearby_pickup_points();
 		clear_login();
 		clear_address_cache();
-		check_nearby_pickups();
-		end_custom_settings();
+
+		if ( \get_option( 'hcnsg_debug' ) && 'yes' === \get_option( 'hcnsg_debug' ) ) {
+			check_nearby_pickups();
+		}
+
+		end_custom_settings(); // Table end.
 	}
 }
 
@@ -53,6 +61,7 @@ function append_settings_to_tab() {
  * Saving the data from the fields.
  */
 function update_settings() {
+	update_solutions_for_nearby_api_points();
 	woocommerce_update_options( render_settings() );
 }
 
@@ -134,7 +143,6 @@ function wc_hcsng_maybe_time_new( string $value ) : string {
 
 	return $value;
 }
-add_filter( 'pre_update_option_hcsng_expiration_time', __NAMESPACE__ . '\\wc_hcsng_maybe_time_new', 10 );
 
 /**
  * Custom settings start.
@@ -185,9 +193,36 @@ function clear_address_cache() {
 }
 
 /**
+ * Match nearbypoints with the right solution.
+ */
+function nearby_pickup_points() {
+	$transport_solutions = ( ! empty( get_option( 'hcnsg_transportSolutions' ) ) && is_array( explode( PHP_EOL, get_option( 'hcnsg_transportSolutions' ) ) ) ) ? explode( PHP_EOL, get_option( 'hcnsg_transportSolutions' ) ) : [];
+	?>
+	<tr>
+		<th scope="row" class="titledesc">
+			<label for="hcnsg_clear_clear_cache"><?php echo esc_html__( 'Allow nearby pick-up points for: ', 'hcnsg' ); ?></label>
+		</th>
+		<td class="forminp forminp-pickup-points">
+			<?php foreach ( $transport_solutions as $solution_data ) { ?>
+					<?php $solution = explode( ':', $solution_data ); ?>
+					<?php $checked = ( ! empty( get_option( 'hcnsg_nearby_api_' . trim( $solution[1] ) ) ) && 'on' === get_option( 'hcnsg_nearby_api_' . trim( $solution[1] ) ) ) ? 'checked' : ''; ?>
+
+				<label>
+					<input <?php echo esc_attr( $checked ); ?> type="checkbox" name="hcnsg_nearby_api_<?php echo esc_html( trim( $solution[1] ) ); ?>">
+					<?php echo esc_html( trim( $solution[0] ) ); ?>
+				</label>
+				<br/>
+			<?php } ?>
+		</td>
+	</tr>
+	<?php
+}
+
+/**
  * Render the nearby pick-up points helper.
  */
 function check_nearby_pickups() {
+	$transport_solutions = ( ! empty( get_option( 'hcnsg_transportSolutions' ) ) && is_array( explode( PHP_EOL, get_option( 'hcnsg_transportSolutions' ) ) ) ) ? explode( PHP_EOL, get_option( 'hcnsg_transportSolutions' ) ) : [];
 	?>
 	<tr>
 		<th scope="row" class="titledesc">
@@ -201,9 +236,9 @@ function check_nearby_pickups() {
 					<select id="hcnsg_transportID">
 						<option value=""><?php echo esc_html__( 'Transport solution', 'hcnsg' ); ?></option>
 						<?php
-						foreach ( explode( PHP_EOL, get_option( 'hcnsg_transportSolutions' ) ) as $solution ) {
+						foreach ( $transport_solutions as $solution_data ) {
 
-							$solution_array = explode( ':', $solution );
+							$solution_array = explode( ':', $solution_data );
 
 							if ( is_array( $solution_array ) && 2 === count( $solution_array ) ) {
 								?>
@@ -227,4 +262,45 @@ function check_nearby_pickups() {
 		</td>
 	</tr>
 	<?php
+}
+
+/**
+ * Save the solutions for which we have nearby pickup points.
+ */
+function update_solutions_for_nearby_api_points() {
+	$transport_solutions = ( ! empty( get_option( 'hcnsg_transportSolutions' ) ) && is_array( explode( PHP_EOL, get_option( 'hcnsg_transportSolutions' ) ) ) ) ? explode( PHP_EOL, get_option( 'hcnsg_transportSolutions' ) ) : [];
+	$nearby_api_points   = [];
+	foreach ( $transport_solutions as $solution ) {
+		$solution_array = explode( ':', $solution );
+		$solution_id    = trim( $solution_array[1] );
+
+		$api_point = filter_input( INPUT_POST, 'hcnsg_nearby_api_' . $solution_id, FILTER_SANITIZE_STRING );
+
+		if ( ! empty( $api_point ) && 'on' === $api_point ) {
+			update_option( 'hcnsg_nearby_api_' . $solution_id, $api_point );
+			$nearby_api_points[] = $solution_id;
+		} else {
+			delete_option( 'hcnsg_nearby_api_' . $solution_id );
+		}
+	}
+
+	update_option( 'hcnsg_api_points_solutions', $nearby_api_points );
+}
+
+/**
+ * Show the pickup point in the order admin edit screen.
+ *
+ * @param \WC_Order $order The order object.
+ */
+function admin_show_pickup_point( \WC_Order $order ) {
+	$pickup_point = $order->get_meta( '_hcnsg_nearby' );
+	if ( ! empty( $pickup_point ) ) {
+		echo wp_kses_post(
+			sprintf(
+				'<div class="pickup_point_address"><h3>%1$s</h3>%2$s</div>',
+				esc_html__( 'Pickup Point: ', 'hcnsg' ),
+				$pickup_point
+			)
+		);
+	}
 }

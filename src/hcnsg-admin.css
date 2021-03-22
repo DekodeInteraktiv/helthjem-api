@@ -8,6 +8,7 @@
 
 .forminp-pickup-points .data > div {
     flex-basis: 45%;
+    overflow: auto;
 }
 
 .forminp-pickup-points .data > div:last-child {

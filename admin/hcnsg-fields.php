@@ -128,6 +128,20 @@ function render_settings() : array {
 					wp_kses_post( 'Example:<br/>First option name : 23<br/>Second option name : 45<br/>Third option name : 67' )
 				),
 			],
+			'hcnsg_debug'              => [
+				'id'       => 'hcnsg_debug',
+				'name'     => esc_html__( 'Debugging: ', 'hcsng' ),
+				'type'     => 'checkbox',
+				'desc'     => esc_html__( 'Extra details for developers.', 'hcsng' ),
+				'desc_tip' => false,
+			],
+			'hcnsg_style_enhance'      => [
+				'id'       => 'hcnsg_style_enhance',
+				'name'     => esc_html__( 'Style enhance: ', 'hcsng' ),
+				'type'     => 'checkbox',
+				'desc'     => esc_html__( 'Adds some style and some scripting in the front-end.', 'hcsng' ),
+				'desc_tip' => false,
+			],
 			'hcsng_details_end'        => [
 				'type' => 'sectionend',
 				'id'   => 'hcsng_details_end',
