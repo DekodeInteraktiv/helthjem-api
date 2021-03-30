@@ -110,11 +110,19 @@ function check_shipping_address( array $rates, array $package ) : array {
 													$hours = $opening_hour->from1 . ' - ' . $opening_hour->to1;
 												}
 											} else {
-												$hours = '-';
+												$hours = esc_html__( 'Closed', 'hcnsg' );
 											}
 
 											$opening_hours[ $opening_hour->day ] = $hours;
 										}
+
+										foreach ( $opening_hours as $day => $hours ) {
+											if ( empty( $hours ) ) {
+												$opening_hours[ $day ] = esc_html__( 'Closed', 'hcnsg' );
+											}
+										}
+
+										$opening_hours = array_change_key_case( $opening_hours, CASE_LOWER );
 
 										$street = ( ! empty( $service_point->deliveryAddress->streetName ) ) ? $service_point->deliveryAddress->streetName : '';
 										$number = ( ! empty( $service_point->deliveryAddress->streetNumber ) ) ? $service_point->deliveryAddress->streetNumber : '';
@@ -124,6 +132,7 @@ function check_shipping_address( array $rates, array $package ) : array {
 
 										$delivery_address = [
 											'address' => $street . ' ' . $number . ', ' . $city,
+											'hours'   => $opening_hours,
 											'gps'     => $north . ', ' . $east,
 										];
 
@@ -194,7 +203,7 @@ function append_shipping_options( \WC_Shipping_Rate $shipping_rate, int $index )
 					foreach ( $service_point['opened'] as $day => $hours ) {
 						printf(
 							'<span class="open-day"><span class="day">%1$s</span>%2$s<span class="hours">%3$s</span></span><br/>',
-							esc_html( strtolower( $day ) ),
+							esc_html( ( $day ) ),
 							esc_html__( ': ', 'hcnsg' ),
 							esc_html( $hours )
 						);
@@ -202,7 +211,7 @@ function append_shipping_options( \WC_Shipping_Rate $shipping_rate, int $index )
 				}
 				echo '</li>';
 			}
-			echo '</div>';
+			echo '</ul>';
 		}
 	}
 }
@@ -229,11 +238,25 @@ function add_shipping_pickuppoint_to_order_details( int $order_id, array $data )
 					if ( ! empty( $meta_data['hcnsg_nearby_points'] ) ) {
 						foreach ( $meta_data['hcnsg_nearby_points'] as $item ) {
 							if ( $nearbypoint === $item['id'] ) {
+								$html_hours = PHP_EOL;
+
+								if ( ! empty ( $item['location']['hours'] ) ) {
+									foreach ( $item['location']['hours'] as $day => $hours ) {
+										$html_hours .= sprintf(
+											'<span class="day-line"><span class="day">%s</span><span class="hours">%s</span></span><br/>',
+											esc_html( $day . ':' ),
+											esc_html( $hours )
+										);
+									}
+								}
+
 								$html = sprintf(
-									'<p class="hcnsg-order-nearby-point"><strong>%1$s</strong><br/>%2$s</p>',
+									'<p class="hcnsg-order-nearby-point"><strong>%1$s</strong><br/>%2$s<br/><span class="opening-hours">%3$s</span></p>',
 									esc_html( $item['service_name'] ),
-									esc_html( $item['location']['address'] )
+									esc_html( $item['location']['address'] ),
+									wp_kses_post( $html_hours )
 								);
+
 								\update_post_meta( $order_id, '_hcnsg_nearby', $html );
 							}
 						}
