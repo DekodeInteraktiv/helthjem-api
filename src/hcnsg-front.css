@@ -37,5 +37,17 @@ input.shipping_method ~ .hcnsg-nearby-points.hidden {
     font-weight: bold;
 }
 
+.woocommerce-order-received .opening-hours {
+    display: inline-block;
+    margin-top: 4px;
+    border-top: 1px solid #c0c0c0;
+}
 
+.woocommerce-order-received .day-line {
+    line-height: 1.8;
+}
 
+.woocommerce-order-received .opening-hours .day {
+    text-transform: capitalize;
+    padding-right: 10px;
+}

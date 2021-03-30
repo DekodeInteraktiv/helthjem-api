@@ -82,4 +82,3 @@ function front_enqueue_scripts() {
 
 }
 add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\front_enqueue_scripts' );
-

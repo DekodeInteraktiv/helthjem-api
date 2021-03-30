@@ -53,8 +53,11 @@ function add_pickup_point_to_emails( object $order, bool $sent_to_admin, bool $p
 function add_pickup_point_email_css( string $css ) : string {
 	return $css .= '
 		.pickup_point_address {margin-bottom:40px;}
-		.pickup_point_address p {display:block; padding: 12px; border: 1px solid #e5e5e5;}
+		.pickup_point_address p {display:block; padding: 12px; border: 1px solid #e5e5e5;text-decoration: underline;}
 		.pickup_point_address p strong {display:inline-block; padding-bottom:4px;}
+		.opening-hours { display: inline-block; margin-top: 7px; }
+		.opening-hours .day-line {line-height: 1.5;}
+		.opening-hours .day {text-transform: capitalize;padding-right: 10px;}
 	';
 
 }
